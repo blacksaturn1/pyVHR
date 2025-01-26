@@ -41,7 +41,7 @@ class Params:
 
     # BVP method
     # dictionary of {method_func, device_type, params}
-    method = {'method_func': cupy_CHROM,
+    method = {'method_func': torch_CHROM,
               'device_type': 'cuda', 'params': {}}
 
     # Post filtering

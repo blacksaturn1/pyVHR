@@ -359,7 +359,7 @@ if __name__ == '__main__':
     Params.pre_filter = [{'filter_func': BPfilter, 'params': {
         'minHz': 0.7, 'maxHz': 3.0, 'fps': 'adaptive', 'order': 6}}]
 
-    Params.method = {'method_func': cupy_CHROM,
+    Params.method = {'method_func': torch_CHROM,
                      'device_type': 'cuda', 'params': {}}
 
     Params.post_filter = [{'filter_func': BPfilter, 'params': {

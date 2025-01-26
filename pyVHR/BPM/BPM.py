@@ -1,4 +1,4 @@
-import cupy
+#import cupy
 import numpy as np
 from scipy.signal import  stft
 import plotly.graph_objects as go
@@ -103,159 +103,160 @@ class BVPsignal:
         self.spectrogram(winsize)
         return self.bpm, self.times
 
-class BPMcuda:
-    """
-    Provides BPMs estimate from BVP signals using GPU.
+# class BPMcuda:
+#     """
+#     Provides BPMs estimate from BVP signals using GPU.
 
-    BVP signal must be a float32 cupy.ndarray with shape [num_estimators, num_frames].
-    """
-    def __init__(self, data, fps, startTime=0, minHz=0.65, maxHz=4., verb=False):
-        """
-        Input 'data' is a BVP signal defined as a float32 cupy.ndarray with shape [num_estimators, num_frames]
-        """
-        self.nFFT = 2048//1  # freq. resolution for STFTs
-        if len(data.shape) == 1:
-            self.data = data.reshape(1, -1)  # 2D array raw-wise
-        else:
-            self.data = data
-        self.fps = fps                       # sample rate
-        self.startTime = startTime
-        self.verb = verb
-        self.minHz = minHz
-        self.maxHz = maxHz
-        self.gpuData = cupy.asarray(
-            [self.fps, self.nFFT, self.minHz, self.maxHz])
-        self.gmodel = Model(gaussian, independent_vars=['x', 'mu', 'a'])
+#     BVP signal must be a float32 cupy.ndarray with shape [num_estimators, num_frames].
+#     """
+#     def __init__(self, data, fps, startTime=0, minHz=0.65, maxHz=4., verb=False):
+#         """
+#         Input 'data' is a BVP signal defined as a float32 cupy.ndarray with shape [num_estimators, num_frames]
+#         """
+#         self.nFFT = 2048//1  # freq. resolution for STFTs
+#         if len(data.shape) == 1:
+#             self.data = data.reshape(1, -1)  # 2D array raw-wise
+#         else:
+#             self.data = data
+#         self.fps = fps                       # sample rate
+#         self.startTime = startTime
+#         self.verb = verb
+#         self.minHz = minHz
+#         self.maxHz = maxHz
+#         self.gpuData = cupy.asarray(
+#             [self.fps, self.nFFT, self.minHz, self.maxHz])
+#         self.gmodel = Model(gaussian, independent_vars=['x', 'mu', 'a'])
 
-    def BVP_to_BPM(self):
-        """
-        Return the BPM signal as a float32 cupy.ndarray with shape [num_estimators, ]. Remember that
-        the value returned is on GPU, use cupy.asnumpy() to transform it to a Numpy ndarray.
+#     def BVP_to_BPM(self):
+#         """
+#         Return the BPM signal as a float32 cupy.ndarray with shape [num_estimators, ]. Remember that
+#         the value returned is on GPU, use cupy.asnumpy() to transform it to a Numpy ndarray.
 
-        This method use the Welch's method to estimate the spectral density of the BVP signal,
-        then it chooses as BPM the maximum Amplitude frequency.
-        """
-        # -- interpolation for less than 256 samples
-        _, n = self.data.shape
-        if self.data.shape[0] == 0:
-            return cupy.float32(0.0)
-        Pfreqs, Power = Welch_cuda(self.data, self.gpuData[0], self.gpuData[2], self.gpuData[3], self.gpuData[1])
-        # -- BPM estimate 
-        Pmax = cupy.argmax(Power, axis=1)  # power max
-        return Pfreqs[Pmax.squeeze()]
+#         This method use the Welch's method to estimate the spectral density of the BVP signal,
+#         then it chooses as BPM the maximum Amplitude frequency.
+#         """
+#         # -- interpolation for less than 256 samples
+#         _, n = self.data.shape
+#         if self.data.shape[0] == 0:
+#             #return cupy.float32(0.0)
+#             return 0.0
+#         Pfreqs, Power = Welch_cuda(self.data, self.gpuData[0], self.gpuData[2], self.gpuData[3], self.gpuData[1])
+#         # -- BPM estimate 
+#         Pmax = cupy.argmax(Power, axis=1)  # power max
+#         return Pfreqs[Pmax.squeeze()]
 
     
-    def BVP_to_BPM_PSD_clustering(self, opt_factor=0.1):
-        """
-        Return the BPM signal as a numpy.float32. 
+#     def BVP_to_BPM_PSD_clustering(self, opt_factor=0.1):
+#         """
+#         Return the BPM signal as a numpy.float32. 
 
-        TODO: cambiare descrizione.
-        This method use the Welch's method to estimate the spectral density of the BVP signal; in case
-        of multiple estimators the method sum all the Power Spectums, then it chooses as BPM the 
-        maximum Amplitude frequency.
-        """
-        # -- interpolation for less than 256 samples
-        if self.data.shape[0] == 0:
-            return np.float32(0.0)
-        Pfreqs, Power = Welch_cuda(self.data, self.fps, self.minHz, self.maxHz, self.nFFT)
+#         TODO: cambiare descrizione.
+#         This method use the Welch's method to estimate the spectral density of the BVP signal; in case
+#         of multiple estimators the method sum all the Power Spectums, then it chooses as BPM the 
+#         maximum Amplitude frequency.
+#         """
+#         # -- interpolation for less than 256 samples
+#         if self.data.shape[0] == 0:
+#             return np.float32(0.0)
+#         Pfreqs, Power = Welch_cuda(self.data, self.fps, self.minHz, self.maxHz, self.nFFT)
         
-        # F are frequencies, PSD is Power Spectrum Density of all estimators
-        F = cupy.asnumpy(Pfreqs)
-        PSD = cupy.asnumpy(Power)
+#         # F are frequencies, PSD is Power Spectrum Density of all estimators
+#         F = cupy.asnumpy(Pfreqs)
+#         PSD = cupy.asnumpy(Power)
         
-        # Less then 3 estimators, choose the maximum Amplitude frequency
-        if PSD.shape[0] < 3:
-          IDmax = np.unravel_index(np.argmax(PSD, axis=None), PSD.shape)
-          Fmax = F[IDmax[1]]
-          return np.float32(Fmax)
+#         # Less then 3 estimators, choose the maximum Amplitude frequency
+#         if PSD.shape[0] < 3:
+#           IDmax = np.unravel_index(np.argmax(PSD, axis=None), PSD.shape)
+#           Fmax = F[IDmax[1]]
+#           return np.float32(Fmax)
 
-        # distance matrix among PSDs
-        W = pairwise_distances(PSD, PSD, metric='cosine')
-        theta = circle_clustering(W, eps=0.01)
+#         # distance matrix among PSDs
+#         W = pairwise_distances(PSD, PSD, metric='cosine')
+#         theta = circle_clustering(W, eps=0.01)
 
-        # bi-partition, sum and normalization
-        P, Q, Z, _, _ = optimize_partition(theta, opt_factor=opt_factor)
+#         # bi-partition, sum and normalization
+#         P, Q, Z, _, _ = optimize_partition(theta, opt_factor=opt_factor)
 
-        # clusters
-        C0 = PSD[P,:]
-        C1 = PSD[Q,:]
+#         # clusters
+#         C0 = PSD[P,:]
+#         C1 = PSD[Q,:]
         
-        PSD0_mean = np.sum(C0, axis=0)   # sum of PSDs in P
-        max = np.max(PSD0_mean, axis=0)
-        max = np.expand_dims(max, axis=0)
-        PSD0_mean = np.squeeze(np.divide(PSD0_mean, max))
-        #PSD0_mean = shrink(PSD0_mean)
+#         PSD0_mean = np.sum(C0, axis=0)   # sum of PSDs in P
+#         max = np.max(PSD0_mean, axis=0)
+#         max = np.expand_dims(max, axis=0)
+#         PSD0_mean = np.squeeze(np.divide(PSD0_mean, max))
+#         #PSD0_mean = shrink(PSD0_mean)
 
-        PSD1_mean = np.sum(C1, axis=0)    # sum of PSDs in Q
-        max = np.max(PSD1_mean, axis=0)
-        max = np.expand_dims(max, axis=0)
-        PSD1_mean = np.squeeze(np.divide(PSD1_mean, max))
-        #PSD1_mean = shrink(PSD1_mean)
+#         PSD1_mean = np.sum(C1, axis=0)    # sum of PSDs in Q
+#         max = np.max(PSD1_mean, axis=0)
+#         max = np.expand_dims(max, axis=0)
+#         PSD1_mean = np.squeeze(np.divide(PSD1_mean, max))
+#         #PSD1_mean = shrink(PSD1_mean)
 
-        # peaks
-        peak0_idx = np.argmax(PSD0_mean) 
-        PSD0_mean_max = PSD0_mean[peak0_idx]
-        F0 = F[peak0_idx]
+#         # peaks
+#         peak0_idx = np.argmax(PSD0_mean) 
+#         PSD0_mean_max = PSD0_mean[peak0_idx]
+#         F0 = F[peak0_idx]
 
-        peak1_idx = np.argmax(PSD1_mean) 
-        PSD1_mean_max = PSD1_mean[peak1_idx]
-        F1 = F[peak1_idx]
+#         peak1_idx = np.argmax(PSD1_mean) 
+#         PSD1_mean_max = PSD1_mean[peak1_idx]
+#         F1 = F[peak1_idx]
 
-        peak_all_idx = np.argmax(PSD, axis=1)
-        MED = np.median(F[peak_all_idx])
+#         peak_all_idx = np.argmax(PSD, axis=1)
+#         MED = np.median(F[peak_all_idx])
         
-        # Gaussian fitting
-        result0, G0, sigma0 = gaussian_fit(PSD0_mean, F, F0, 1)  # Gaussian fit 
-        result1, G1, sigma1 = gaussian_fit(PSD1_mean, F, F1, 1)  # Gaussian fit 
-        chis0 = result0.chisqr
-        chis1 = result1.chisqr
-        rchis0 = result0.redchi
-        rchis1 = result1.redchi
-        aic0 = result0.aic
-        aic1 = result1.aic
-        bic0 = result0.bic
-        bic1 = result1.bic
-        SNR0, mask0 = PSD_SNR(PSD0_mean, F0, sigma0, F) 
-        SNR0 = SNR0/sigma0  # normalization with respect to sigma
-        SNR1, mask1 = PSD_SNR(PSD1_mean, F1, sigma1, F) 
-        SNR1 = SNR1/sigma1  # normalization with respect to sigma
+#         # Gaussian fitting
+#         result0, G0, sigma0 = gaussian_fit(PSD0_mean, F, F0, 1)  # Gaussian fit 
+#         result1, G1, sigma1 = gaussian_fit(PSD1_mean, F, F1, 1)  # Gaussian fit 
+#         chis0 = result0.chisqr
+#         chis1 = result1.chisqr
+#         rchis0 = result0.redchi
+#         rchis1 = result1.redchi
+#         aic0 = result0.aic
+#         aic1 = result1.aic
+#         bic0 = result0.bic
+#         bic1 = result1.bic
+#         SNR0, mask0 = PSD_SNR(PSD0_mean, F0, sigma0, F) 
+#         SNR0 = SNR0/sigma0  # normalization with respect to sigma
+#         SNR1, mask1 = PSD_SNR(PSD1_mean, F1, sigma1, F) 
+#         SNR1 = SNR1/sigma1  # normalization with respect to sigma
         
-        # ranking
-        rankP0 = 0
-        rankP1 = 0
-        if abs(sigma0-sigma1) > .1:  # exclude
-            if sigma0 < sigma1:
-                rankP0 = rankP0 + np.max([1, sigma1/sigma0])
-            else:
-                rankP1 = rankP1 + np.max([1, sigma0/sigma1])
-        if abs(chis0 - chis1) > .1:  # exclude
-            if chis0 < chis1:
-                rankP0 = rankP0 + 1
-            else:
-                rankP1 = rankP1 + 1 
-        if -abs(aic0 - aic1)/min(aic0, aic1) > 0.1:  # exclude
-            if aic0 < aic1:
-                rankP0 = rankP0 + 1
-            else:
-                rankP1 = rankP1 + 1  
-        if abs(SNR0-SNR1) > .1:  # exclude
-            if SNR0 > SNR1:
-                rankP0 = rankP0 + 1 
-            else:
-                rankP1 = rankP1 + 1 
-        if abs(MED-F0) < abs(MED-F1):  
-            rankP0 = rankP0 + 1
-        else:
-            rankP1 = rankP1 + 1
+#         # ranking
+#         rankP0 = 0
+#         rankP1 = 0
+#         if abs(sigma0-sigma1) > .1:  # exclude
+#             if sigma0 < sigma1:
+#                 rankP0 = rankP0 + np.max([1, sigma1/sigma0])
+#             else:
+#                 rankP1 = rankP1 + np.max([1, sigma0/sigma1])
+#         if abs(chis0 - chis1) > .1:  # exclude
+#             if chis0 < chis1:
+#                 rankP0 = rankP0 + 1
+#             else:
+#                 rankP1 = rankP1 + 1 
+#         if -abs(aic0 - aic1)/min(aic0, aic1) > 0.1:  # exclude
+#             if aic0 < aic1:
+#                 rankP0 = rankP0 + 1
+#             else:
+#                 rankP1 = rankP1 + 1  
+#         if abs(SNR0-SNR1) > .1:  # exclude
+#             if SNR0 > SNR1:
+#                 rankP0 = rankP0 + 1 
+#             else:
+#                 rankP1 = rankP1 + 1 
+#         if abs(MED-F0) < abs(MED-F1):  
+#             rankP0 = rankP0 + 1
+#         else:
+#             rankP1 = rankP1 + 1
 
-        # best fit
-        bpm = None
-        if rankP0 > rankP1:
-            bpm = F0
-        else:
-            bpm = F1
+#         # best fit
+#         bpm = None
+#         if rankP0 > rankP1:
+#             bpm = F0
+#         else:
+#             bpm = F1
 
-        return np.float32(bpm)
+#         return np.float32(bpm)
 
 class BPM:
     """

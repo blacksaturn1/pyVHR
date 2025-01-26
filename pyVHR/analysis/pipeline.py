@@ -338,7 +338,7 @@ class Pipeline():
         ## 2. set patches
         if roi_approach == 'patches':
             sig_processing.set_landmarks(ldmks_list)
-            sig_processing.set_square_patches_side(np.float(patch_size))
+            sig_processing.set_square_patches_side(float(patch_size))
         
         # set sig-processing and skin-processing params
         SignalProcessingParams.RGB_LOW_TH = RGB_LOW_HIGH_TH[0]
@@ -438,16 +438,18 @@ class Pipeline():
             print(f" - roi appproach: {roi_approach}")  
 
         if roi_approach == 'holistic':
-            if cuda:
-                bpmES = BVP_to_BPM_cuda(bvps_win, fps, minHz=Pipeline.minHz, maxHz=Pipeline.maxHz)
-            else:
-                bpmES = BVP_to_BPM(bvps_win, fps, minHz=Pipeline.minHz, maxHz=Pipeline.maxHz)
+            bpmES = BVP_to_BPM(bvps_win, fps, minHz=Pipeline.minHz, maxHz=Pipeline.maxHz)
+            # if cuda:
+            #     bpmES = BVP_to_BPM_cuda(bvps_win, fps, minHz=Pipeline.minHz, maxHz=Pipeline.maxHz)
+            # else:
+            #     bpmES = BVP_to_BPM(bvps_win, fps, minHz=Pipeline.minHz, maxHz=Pipeline.maxHz)
 
         elif roi_approach == 'patches':
             if estimate == 'clustering':
                 #if cuda and False:
                 #    bpmES = BVP_to_BPM_PSD_clustering_cuda(bvps_win, fps, minHz=Pipeline.minHz, maxHz=Pipeline.maxHz)
                 #else:
+                    #bpmES = BPM_clustering(sig_processing, bvps_win, winsize, movement_thrs=[15, 15, 15], fps=fps, opt_factor=0.5)
                 #bpmES = BPM_clustering(sig_processing, bvps_win, winsize, movement_thrs=[15, 15, 15], fps=fps, opt_factor=0.5)
                 ma = MotionAnalysis(sig_processing, winsize, fps)
                 bpmES = BPM_clustering(ma, bvps_win, fps, winsize, movement_thrs=movement_thrs, opt_factor=0.5)
@@ -456,7 +458,8 @@ class Pipeline():
 
             elif estimate == 'median':
                 if cuda:
-                    bpmES = BVP_to_BPM_cuda(bvps_win, fps, minHz=Pipeline.minHz, maxHz=Pipeline.maxHz)
+                    bpmES = BVP_to_BPM(bvps_win, fps, minHz=Pipeline.minHz, maxHz=Pipeline.maxHz)
+                    # bpmES = BVP_to_BPM_cuda(bvps_win, fps, minHz=Pipeline.minHz, maxHz=Pipeline.maxHz)
                 else:
                     bpmES = BVP_to_BPM(bvps_win, fps, minHz=Pipeline.minHz, maxHz=Pipeline.maxHz)
                 bpmES,_ = BPM_median(bpmES)

@@ -1,3 +1,16 @@
+sudo apt install python3.10-venv
+python3 -m venv ~/.venvs/pyvhr3
+
+source ~/.venvs/pyvhr3/bin/activate
+
+pip installk 
+pip install -r requirements.txt
+
+
+
+
+
+
 <img src="https://raw.githubusercontent.com/phuselab/pyVHR/master/img/pyVHR-logo.png" alt="pyVHR logo" width="300"/>
 
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyvhr)

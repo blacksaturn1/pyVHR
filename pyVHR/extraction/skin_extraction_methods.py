@@ -1,5 +1,5 @@
 from numba import cuda, njit, prange
-import cupy
+#import cupy
 import math
 import numpy as np
 import torchvision.transforms as transforms
@@ -49,24 +49,24 @@ def bbox2_CPU(img):
     return rmin, rmax, cmin, cmax
 
 
-def bbox2_GPU(img):
-    """
-    Args:
-        img (cupy.ndarray): cupy.ndarray with shape [rows, columns, rgb_channels].
+# def bbox2_GPU(img):
+#     """
+#     Args:
+#         img (cupy.ndarray): cupy.ndarray with shape [rows, columns, rgb_channels].
 
-    Returns: 
-        Four cropping coordinates (row, row, column, column) for removing black borders (RGB [O,O,O]) from img. 
-        The returned variables are on GPU.
-    """
-    rows = cupy.any(img, axis=1)
-    cols = cupy.any(img, axis=0)
-    nzrows = cupy.nonzero(rows)
-    nzcols = cupy.nonzero(cols)
-    if nzrows[0].size == 0 or nzcols[0].size == 0:
-        return -1, -1, -1, -1
-    rmin, rmax = cupy.nonzero(rows)[0][[0, -1]]
-    cmin, cmax = cupy.nonzero(cols)[0][[0, -1]]
-    return rmin, rmax, cmin, cmax
+#     Returns: 
+#         Four cropping coordinates (row, row, column, column) for removing black borders (RGB [O,O,O]) from img. 
+#         The returned variables are on GPU.
+#     """
+#     rows = cupy.any(img, axis=1)
+#     cols = cupy.any(img, axis=0)
+#     nzrows = cupy.nonzero(rows)
+#     nzcols = cupy.nonzero(cols)
+#     if nzrows[0].size == 0 or nzcols[0].size == 0:
+#         return -1, -1, -1, -1
+#     rmin, rmax = cupy.nonzero(rows)[0][[0, -1]]
+#     cmin, cmax = cupy.nonzero(cols)[0][[0, -1]]
+#     return rmin, rmax, cmin, cmax
 
 
 ### SKIN EXTRACTION CLASSES ###
@@ -305,25 +305,25 @@ class SkinExtractionConvexHull:
             mounth_mask = np.ones((image.shape[0], image.shape[1],1),dtype=np.uint8)
 
         # apply masks and crop 
-        if self.device == 'GPU':
-            image = cupy.asarray(image)
-            mask = cupy.asarray(mask)
-            left_eye_mask = cupy.asarray(left_eye_mask)
-            right_eye_mask = cupy.asarray(right_eye_mask)
-            mounth_mask = cupy.asarray(mounth_mask)
+        # if self.device == 'GPU':
+        #     image = cupy.asarray(image)
+        #     mask = cupy.asarray(mask)
+        #     left_eye_mask = cupy.asarray(left_eye_mask)
+        #     right_eye_mask = cupy.asarray(right_eye_mask)
+        #     mounth_mask = cupy.asarray(mounth_mask)
         skin_image = image * mask * (1-left_eye_mask) * (1-right_eye_mask) * (1-mounth_mask)
 
-        if self.device == 'GPU':
-            rmin, rmax, cmin, cmax = bbox2_GPU(skin_image)
-        else:
-            rmin, rmax, cmin, cmax = bbox2_CPU(skin_image)
+        # if self.device == 'GPU':
+        #     rmin, rmax, cmin, cmax = bbox2_GPU(skin_image)
+        # else:
+        rmin, rmax, cmin, cmax = bbox2_CPU(skin_image)
 
         cropped_skin_im = skin_image
         if rmin >= 0 and rmax >= 0 and cmin >= 0 and cmax >= 0 and rmax-rmin >= 0 and cmax-cmin >= 0:
             cropped_skin_im = skin_image[int(rmin):int(rmax), int(cmin):int(cmax)]
 
-        if self.device == 'GPU':
-            cropped_skin_im = cupy.asnumpy(cropped_skin_im)
-            skin_image = cupy.asnumpy(skin_image)
+        # if self.device == 'GPU':
+        #     cropped_skin_im = cupy.asnumpy(cropped_skin_im)
+        #     skin_image = cupy.asnumpy(skin_image)
 
         return cropped_skin_im, skin_image

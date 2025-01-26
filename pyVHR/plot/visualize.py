@@ -285,7 +285,7 @@ def visualize_landmarks_list(image_file_name=None, landmarks_list=None):
     fig.show(renderer=VisualizeParams.renderer)
 
 
-from pyVHR.BPM.utils import Model, gaussian, Welch, Welch_cuda, pairwise_distances, circle_clustering, optimize_partition, gaussian_fit
+from pyVHR.BPM.utils import Model, gaussian, Welch, pairwise_distances, circle_clustering, optimize_partition, gaussian_fit
 def visualize_BVPs_PSD_clutering(GT_BPM, GT_times , BVPs, times, fps, minHz=0.65, maxHz=4.0, out_fact=1):
     """
     TODO: documentare
