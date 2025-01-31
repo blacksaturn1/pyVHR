@@ -1,4 +1,3 @@
-import csv
 import numpy as np
 from pyVHR.datasets.dataset import Dataset
 from pyVHR.BPM.BPM import BVPsignal
@@ -39,23 +38,23 @@ class UBFC2(Dataset):
         gtTrace = []
         gtTime = []
         gtHR = []
-        with open(filename, 'r') as f:
-            x = f.readlines()
+        with open(filename, 'r') as file:
+            x = file.readlines()
 
         s = x[0].split(' ')
         s = list(filter(lambda a: a != '', s))
+        s = [value for value in s if value.replace('.', '', 1).isdigit()]
         gtTrace = np.array(s).astype(np.float64)
 
         t = x[2].split(' ')
-        t = list(filter(lambda a: a != '', t))
+        t = list(filter(lambda a: a.replace('.', '', 1).isdigit(), t))
         gtTime = np.array(t).astype(np.float64)
 
         hr = x[1].split(' ')
-        hr = list(filter(lambda a: a != '', hr))
+        hr = list(filter(lambda a: a != '' and a != '\n', hr))
         gtHR = np.array(hr).astype(np.float64)
 
-        data = np.array(gtTrace)
         time = np.array(gtTime)
         self.SIG_SampleRate = np.round(1/np.mean(np.diff(time)))
 
-        return BVPsignal(data, self.SIG_SampleRate)
+        return BVPsignal(gtTrace, self.SIG_SampleRate)

@@ -51,12 +51,15 @@ class BVPsignal:
         minHz = 0.65
         maxHz = 4.0
         band = np.argwhere((F > minHz) & (F < maxHz)).flatten()
-        self.spect = np.abs(Z[band, :])     # spectrum magnitude
+        self.spect = np.abs(Z[band])     # spectrum magnitude
         self.freqs = 60*F[band]            # spectrum freq in bpm
         self.times = T                     # spectrum times
 
         # -- BPM estimate by spectrum
-        self.bpm = self.freqs[np.argmax(self.spect, axis=0)]
+        if self.spect.size == 0:
+            self.bpm = np.array([])
+        else:
+            self.bpm = self.freqs[np.argmax(self.spect, axis=0)]
 
     def displaySpectrum(self, display=False, dims=3):
         """Show the spectrogram of the BVP signal"""

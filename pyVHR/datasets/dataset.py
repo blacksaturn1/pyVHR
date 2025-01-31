@@ -64,20 +64,20 @@ class Dataset(metaclass=ABCMeta):
         """Load dataset file names: define vars videoFilenames and BVPFilenames."""
 
         # -- loop on the dir struct of the dataset getting filenames
-        for root, dirs, files in os.walk(self.videodataDIR):
+        for root, _, files in os.walk(self.videodataDIR):
             for f in files:
                 filename = os.path.join(root, f)
-                path, name = os.path.split(filename)
+                _, name = os.path.split(filename)
 
                 # -- select video
                 if filename.endswith(self.video_EXT) and (name.find(self.VIDEO_SUBSTRING) >= 0):
                     self.videoFilenames.append(filename)
 
         # -- loop on the dir struct of the dataset getting BVP filenames
-        for root, dirs, files in os.walk(self.BVPdataDIR):
+        for root, _, files in os.walk(self.BVPdataDIR):
             for f in files:
                 filename = os.path.join(root, f)
-                path, name = os.path.split(filename)
+                _, name = os.path.split(filename)
                 # -- select signal
                 if filename.endswith(self.SIG_EXT) and (name.find(self.SIG_SUBSTRING) >= 0):
                     self.sigFilenames.append(filename)
@@ -87,10 +87,15 @@ class Dataset(metaclass=ABCMeta):
 
     def getVideoFilename(self, videoIdx=0):
         """Get video file name given the progressive index."""
+        if videoIdx < 0 or videoIdx >= len(self.videoFilenames):
+            raise IndexError("video_idx is out of range")
         return self.videoFilenames[videoIdx]
-
+    
     def getSigFilename(self, videoIdx=0):
         """Get Signal file name given the progressive index."""
+        if videoIdx < 0 or videoIdx >= len(self.sigFilenames):
+            print(f"Invalid videoIdx: {videoIdx}, valid range: 0-{len(self.sigFilenames)-1}")
+            raise IndexError("videoIdx is out of range")
         return self.sigFilenames[videoIdx]
 
     @abstractmethod

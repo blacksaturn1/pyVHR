@@ -62,7 +62,10 @@ def BPfilter(sig, **kargs):
     x = np.array(np.swapaxes(sig, 1, 2))
     b, a = butter(kargs['order'], Wn=[kargs['minHz'],
                                       kargs['maxHz']], fs=kargs['fps'], btype='bandpass')
-    y = filtfilt(b, a, x, axis=1)
+    if x.shape[1] > 1:
+        y = filtfilt(b, a, x, axis=1)
+    else:
+        y = x  # If the length of the input vector is not greater than 1, return the input as is.
     y = np.swapaxes(y, 1, 2)
     return y
 
